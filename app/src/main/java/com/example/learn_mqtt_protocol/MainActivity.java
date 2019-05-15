@@ -5,6 +5,8 @@ import android.net.ConnectivityManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +31,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         connect();
+        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                publishToTopic("test", ((EditText)findViewById(R.id.edit)).getText().toString().trim());
+            }
+        });
     }
 
     public void connect(){
@@ -54,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                Toast.makeText(MainActivity.this, message.toString(), Toast.LENGTH_SHORT).show();
+                ((TextView)findViewById(R.id.tv)).setText(message.toString());
             }
 
             @Override
@@ -65,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
+        mqttConnectOptions.setUserName("kishan");
+        mqttConnectOptions.setPassword("root".toCharArray());
 
         try {
             client.connect(mqttConnectOptions, null, new IMqttActionListener() {
@@ -105,7 +115,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public  void publishToTopic(String topic, String message){
+    public  void publishToTopic(String topic, String msg){
+        try {
+            MqttMessage message = new MqttMessage();
+            message.setPayload(msg.getBytes());
+            client.publish(topic, message);
+        }
+        catch (MqttException e) {
+            System.err.println("Error in Publishing");
+        }
 
     }
 }
